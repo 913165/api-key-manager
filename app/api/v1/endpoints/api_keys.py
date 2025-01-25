@@ -1,4 +1,6 @@
 # app/api/v1/endpoints/api_keys.py
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -7,8 +9,11 @@ from app.db.session import get_db
 from app.models.api_key import ApiKey
 from app.schemas.api_key import ApiKeyCreate, ApiKeyResponse
 from app.api.deps import get_current_user
-
+import logging
 router = APIRouter()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=ApiKeyResponse)
@@ -45,7 +50,13 @@ def list_api_keys(
         db: Session = Depends(get_db),
         current_user=Depends(get_current_user)
 ):
-    return db.query(ApiKey).filter(ApiKey.user_id == current_user.id).all()
+    # Log debug information
+    logger.debug(f"Current user ID: {current_user.id}")
+
+    # Perform the query
+    api_keys = db.query(ApiKey).filter(ApiKey.user_id == current_user.id).all()
+
+    return api_keys
 
 
 @router.delete("/{key_id}")
